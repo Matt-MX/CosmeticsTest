@@ -9,13 +9,16 @@ import me.tofaa.entitylib.spigot.SpigotEntityLibPlatform
 import org.bukkit.plugin.java.JavaPlugin
 
 class CosmeticsTest : JavaPlugin() {
+    val movementSync = MovementSync()
 
     override fun onEnable() {
         instance = this
         GuiManager.init(this)
 
+        val pa = PacketEvents.getAPI()
+
         val platform = SpigotEntityLibPlatform(this)
-        val settings = APIConfig(PacketEvents.getAPI())
+        val settings = APIConfig(pa)
             .debugMode()
             .tickTickables()
             .trackPlatformEntities()
@@ -23,15 +26,24 @@ class CosmeticsTest : JavaPlugin() {
 
         EntityLib.init(platform, settings)
 
+        pa.eventManager.registerListeners(movementSync)
+
         rawCommand("test") {
             playerOnly = true
+            suggestSubCommands = true
 
-            runs {
-                val cosmetic = TestHatCosmetic(player)
+            subCommand(rawCommand("tophat") {
+                runs {
+                    TestTopHat().createFor(player)
+                }
+            })
 
-                cosmetic.ridingEntity.addViewer(player.uniqueId)
-                cosmetic.sendPassengerPacketTo(player)
-            }
+            subCommand(rawCommand("backpack") {
+                runs {
+                    TestBackpack().createFor(player)
+                }
+            })
+
         }.register(false)
     }
 
