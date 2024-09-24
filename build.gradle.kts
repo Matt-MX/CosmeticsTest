@@ -23,13 +23,18 @@ repositories {
     maven("https://repo.dmulloy2.net/repository/public/")
     maven("https://jitpack.io")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven("https://repo.codemc.io/repository/maven-releases/")
+    maven("https://maven.evokegames.gg/snapshots")
 }
 
 dependencies {
     paperweight.paperDevBundle(libs.versions.paperApi.get())
 
-    compileOnly(libs.ktgui)
+//    compileOnly(libs.ktgui)
+    compileOnly(files("./libs/api-2.4.4-alpha-dev.jar"))
     compileOnly(libs.placeholder.api)
+    compileOnly(libs.packet.events)
+    implementation(libs.entity.lib)
 }
 
 tasks {
@@ -55,24 +60,33 @@ tasks {
 
     shadowJar {
         mergeServiceFiles()
+        minimize {
+            exclude("kotlin/**")
+        }
     }
 
     test {
         useJUnitPlatform()
     }
 
+    build {
+        dependsOn(shadowJar)
+    }
+
     assemble {
-        dependsOn("reobfJar")
+        dependsOn(reobfJar)
     }
 
     runServer {
         val mcVersion = libs.versions.paperApi.get().split("-")[0]
         minecraftVersion(mcVersion)
+        pluginJars(shadowJar.get().archiveFile)
 
         downloadPlugins {
             hangar("ViaVersion", "5.0.1")
             hangar("ViaBackwards", "5.0.1")
             hangar("PlaceholderAPI", "2.11.6")
+//            modrinth("fancyholograms", "2.3.1")
         }
     }
 }
@@ -83,7 +97,7 @@ java {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 sourceSets["main"].resources.srcDir("src/resources/")
